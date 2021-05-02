@@ -43,6 +43,7 @@ function App({activeTable, activeView, settings}) {
     sessionStorage.getItem(sessionPrefsKey) && JSON.parse(sessionStorage.getItem(sessionPrefsKey))
   ) || { // Defaults
     showBackgrounds: false,
+    showLabels: true,
     showConditions: true
   };
 
@@ -51,6 +52,7 @@ function App({activeTable, activeView, settings}) {
   const [potentialSelection, setPotentialSelection] = useState([]);
   const [showBackgrounds, setShowBackgrounds] = useState(sessionPrefs.showBackgrounds);
   const [showConditions, setShowConditions] = useState(sessionPrefs.showConditions);
+  const [showLabels, setShowLabels] = useState(sessionPrefs.showLabels);
   const [editMode, setEditMode] = useState(false);
   const [jsonErrorRecordIds, setJsonErrorRecordIds] = useState([]);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
@@ -68,10 +70,11 @@ function App({activeTable, activeView, settings}) {
   useEffect(() => {
     sessionStorage.setItem(sessionPrefsKey, JSON.stringify({
       showBackgrounds,
+      showLabels,
       showConditions
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showBackgrounds, showConditions]);
+  }, [showBackgrounds, showLabels, showConditions]);
 
   // Data
   const records = useRecords(activeView);
@@ -180,6 +183,19 @@ function App({activeTable, activeView, settings}) {
               width="auto"
             />
           </Tooltip>
+
+          <Tooltip
+             content="Labels toggle"
+             placementX={Tooltip.placements.CENTER}
+             placementY={Tooltip.placements.BOTTOM}
+             shouldHideTooltipOnClick={true}>
+             <Switch
+               value={showLabels}
+               onChange={newValue => setShowLabels(newValue)}
+               label="Labels"
+               size="small"
+               width="auto"/>
+          </Tooltip>
         </Box>
         {editMode ? (
           <Button
@@ -215,6 +231,7 @@ function App({activeTable, activeView, settings}) {
           }}
           setMap={setMap}
           showBackgrounds={showBackgrounds}
+          showLabels={showLabels}
           showColors={showConditions}
         />
       </Box>

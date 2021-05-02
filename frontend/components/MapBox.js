@@ -33,6 +33,7 @@ export function MapBox({
                          records,
                          selectedRecordIds,
                          showBackgrounds,
+                         showLabels,
                          showColors,
 
                          // functions
@@ -51,8 +52,7 @@ export function MapBox({
 
   const {settings} = useSettings();
   const geometryField = settings.geometryField;
-  const labelField = settings.labelField && activeTable.getFieldByNameIfExists(settings.labelField)
-    ? settings.labelField : activeTable.primaryField;
+  const labelField = settings.labelField && activeTable.getFieldByNameIfExists(settings.labelField) ? settings.labelField : activeTable.primaryField ;
   mapboxgl.accessToken = settings.mapboxAccessToken;
 
   function parseFeatures() {
@@ -66,7 +66,9 @@ export function MapBox({
           id: record.id,
           properties: {
             id: record.id,
-            name: record.getCellValueAsString(labelField),
+            name: showLabels
+                      ? record.getCellValueAsString(labelField)
+                      : "",
             selected: selectedRecordIds.includes(record.id),
             invisible: selectedIds.includes(record.id),
           }
