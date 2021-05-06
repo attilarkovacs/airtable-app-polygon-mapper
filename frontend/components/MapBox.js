@@ -31,6 +31,7 @@ export function MapBox({
                          editMode,
                          map,
                          records,
+                         allRecords,
                          selectedRecordIds,
                          showBackgrounds,
                          showLabels,
@@ -58,7 +59,8 @@ export function MapBox({
   function parseFeatures() {
     const jsonErrorRecords = [];
     const selectedIds = selectedRecordIds.length === 1 && editMode ? selectedRecordIds : [];
-    const newFeatures = records.filter(record => record.getCellValue(geometryField)).map(record => {
+    const filteredRecordIds = records.map(r => r.id);
+    const newFeatures = allRecords.filter(record => record.getCellValue(geometryField)).map(record => {
       try {
         const source = {
           type: 'Feature',
@@ -73,6 +75,12 @@ export function MapBox({
             invisible: selectedIds.includes(record.id),
           }
         };
+
+        if (filteredRecordIds.includes(source.id)) {
+          source.properties.color = '#627BC1';
+        } else {
+          source.properties.color = '#C9C9C9';
+        }
 
         source.properties.labelPoint = findPoint(source);
 
@@ -164,9 +172,10 @@ export function MapBox({
   // Initialize map when component mounts
   useEffect(() => {
 
+    // Attila: this might be reverted back to 'streets'
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v11',
+      style: 'mapbox://styles/mapbox/outdoors-v11',
       center: [lng, lat],
       zoom: zoom
     });
@@ -262,6 +271,7 @@ export function MapBox({
     try {
       const features = map.querySourceFeatures('labels', {sourceLayer: 'labels-text'})
         .filter(feature => !feature.id)
+        .filter((v, i, a) => a.findIndex(t => t.properties.id === v.properties.id) === i) //Attila: this is to remove duplicates
         .map(f => JSON.parse(f.properties.original));
       map.getSource('places').setData({
         type: 'FeatureCollection',

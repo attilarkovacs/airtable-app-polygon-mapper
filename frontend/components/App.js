@@ -77,6 +77,7 @@ function App({activeTable, activeView, settings}) {
   }, [showBackgrounds, showLabels, showConditions]);
 
   // Data
+  const allRecords = useRecords(activeTable);
   const records = useRecords(activeView);
   const selectedRecords = getRecordsById(records, currentRecordIds);
   const jsonErrorRecords = getRecordsById(records, jsonErrorRecordIds);
@@ -185,7 +186,7 @@ function App({activeTable, activeView, settings}) {
           </Tooltip>
 
           <Tooltip
-             content="Labels toggle"
+             content="Show labels"
              placementX={Tooltip.placements.CENTER}
              placementY={Tooltip.placements.BOTTOM}
              shouldHideTooltipOnClick={true}>
@@ -224,6 +225,7 @@ function App({activeTable, activeView, settings}) {
           editMode={editMode}
           map={map}
           records={records}
+          allRecords={allRecords}
           selectRecord={(id) => setPotentialSelection([id])}
           selectedRecordIds={currentRecordIds}
           setJsonErrorRecords={(ids) => {
