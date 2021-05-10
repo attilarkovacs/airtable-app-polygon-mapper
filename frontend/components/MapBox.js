@@ -127,7 +127,7 @@ export function MapBox({
 
   useEffect(() => {
     if (initialized) {
-      tryZooming();
+      tryZooming(initialized);
 
       if (selectedRecordIds.length === 1 && editMode) {
         try {
@@ -292,13 +292,13 @@ export function MapBox({
       });
 
       if (!initialized) {
-        tryZooming();
+        tryZooming(initialized);
         setInitialized(true);
       }
     }
   }
 
-  function tryZooming() {
+  function tryZooming(initialized) {
     if (features.length === 0 || editMode) {
       return;
     }
@@ -312,7 +312,10 @@ export function MapBox({
       }
     }
 
-    zoomSelected(map, selectedRecordIds, features)
+    //Attila: if nothing selected (remove selection), do not zoom out. Zoom when map first initialised
+    if (!initialized || selectedRecordIds.length > 0) {
+      zoomSelected(map, selectedRecordIds, features)
+    }
   }
 
   // Observe features for record changes
