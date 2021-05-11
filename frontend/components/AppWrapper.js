@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {cursor} from '@airtable/blocks';
+import {useCursor} from '@airtable/blocks/ui';
 import {
     useBase,
     useLoadable,
@@ -21,6 +21,7 @@ function Error(message) {
 }
 
 function AppWrapper({settings}) {
+  const cursor = useCursor();
   useLoadable(cursor);
 
   // Watch

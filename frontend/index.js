@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 
-import {session} from "@airtable/blocks";
+import {useSession} from "@airtable/blocks/ui";
 import {
     initializeBlock,
     useSettingsButton,
@@ -16,6 +16,7 @@ function AddSettingsButton({toggleOpen}) {
 }
 
 function MapboxViewer() {
+  const session = useSession();
   const canUpdate = session.checkPermissionsForUpdateRecords().hasPermission;
 
   // Settings

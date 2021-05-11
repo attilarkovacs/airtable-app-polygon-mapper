@@ -55,6 +55,10 @@ export function updateImageSources(map, records, settings) {
 export function updateOpacity(map, opacity) {
   rasterOpacity = opacity;
   if (map) {
-    sources.forEach(id => map.setPaintProperty(id, 'raster-opacity', opacity));
+    sources.forEach(id => {
+      if (map.getLayer(id)) {
+        map.setPaintProperty(id, 'raster-opacity', opacity);
+      }
+    });
   }
 }
