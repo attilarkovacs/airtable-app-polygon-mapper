@@ -79,7 +79,7 @@ export function MapBox({
         if (filteredRecordIds.includes(source.id)) {
           source.properties.color = '#627BC1';
         } else {
-          source.properties.color = '#C9C9C9';
+          source.properties.color = '#878787';
         }
 
         source.properties.labelPoint = findPoint(source);
