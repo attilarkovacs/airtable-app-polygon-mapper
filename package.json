@@ -26,7 +26,7 @@
     "@mapbox/mapbox-gl-draw": "github:deytah/mapbox-gl-draw",
     "d3": "^6.7.0",
     "geojson-bounds": "^1.0.2",
-    "mapbox-gl": "^2.2.0",
+    "mapbox-gl": "^2.3.0-beta.1",
     "mapbox-print-pdf": "github:vinayakkulkarni/mapbox-print-pdf",
     "polylabel": "^1.1.0",
     "react": "^16.14.0",
