@@ -54,7 +54,6 @@ export function MapBox({
   const {settings} = useSettings();
   const geometryField = settings.geometryField;
   const labelField = settings.labelField && activeTable.getFieldByNameIfExists(settings.labelField) ? settings.labelField : activeTable.primaryField ;
-  mapboxgl.accessToken = settings.mapboxAccessToken;
 
   function parseFeatures() {
     const jsonErrorRecords = [];
@@ -169,13 +168,12 @@ export function MapBox({
     }
   }, [activeTable, map, settings.images.table]);
 
+  const accessToken = settings.mapboxAccessToken;
   // Initialize map when component mounts
   useEffect(() => {
-
-    // Attila: this might be reverted back to 'streets'
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/outdoors-v11',
+      style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
       center: [lng, lat],
       zoom: zoom
     });
