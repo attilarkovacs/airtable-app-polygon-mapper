@@ -197,6 +197,11 @@ function App({activeTable, activeView, settings}) {
                size="small"
                width="auto"/>
           </Tooltip>
+
+          <div id="menu">
+            <input type="checkbox" id="terrain-map-checkbox" name="terrain-map"/>
+            <label htmlFor="terrain-map">Terrain map</label>
+          </div>
         </Box>
         {editMode ? (
           <Button

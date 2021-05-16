@@ -179,6 +179,15 @@ export function MapBox({
       zoom: zoom
     });
 
+    const mapCheckbox = document.getElementById('terrain-map-checkbox');
+    mapCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        map.setLayoutProperty('satellite-map', 'visibility', 'visible');
+      } else {
+        map.setLayoutProperty('satellite-map', 'visibility', 'none');
+      }
+    });
+
     // Map controls
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
     map.on('move', () => {
@@ -191,6 +200,19 @@ export function MapBox({
 
     // Draw polygons
     map.on('load', function () {
+      map.addSource("mapbox-satellite", {
+        "type": "raster",
+        "url": "mapbox://mapbox.satellite"
+      });
+      map.addLayer({
+        "type": "raster",
+        "id": 'satellite-map',
+        "source": "mapbox-satellite",
+        'layout': {
+          'visibility': 'none'
+        },
+      });
+
       addSources(map);
 
       addPlacesLayers(map);
