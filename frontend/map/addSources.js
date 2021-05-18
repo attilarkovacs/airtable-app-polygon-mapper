@@ -4,6 +4,11 @@
  * @param map mapboxgl.Map
  */
 export default function addSources(map) {
+  map.addSource("maptiler-map", {
+    "type": "raster",
+    "url": "https://api.maptiler.com/maps/outdoor/tiles.json?key=l4KOlIA8NVQMv9dm4S21"
+  });
+
   map.addSource('places', {
     'type': 'geojson',
     'data': {

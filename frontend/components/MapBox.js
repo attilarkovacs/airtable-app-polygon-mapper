@@ -76,12 +76,6 @@ export function MapBox({
           }
         };
 
-        if (filteredRecordIds.includes(source.id)) {
-          source.properties.color = '#627BC1';
-        } else {
-          source.properties.color = '#878787';
-        }
-
         source.properties.labelPoint = findPoint(source);
 
         if (showColors) {
@@ -94,6 +88,11 @@ export function MapBox({
             // Silently fail to use default layer color
           }
         }
+
+        if (!filteredRecordIds.includes(source.id)) {
+          source.properties.color = '#878787';
+        }
+
         return source;
 
       } catch (e) {
@@ -182,9 +181,9 @@ export function MapBox({
     const mapCheckbox = document.getElementById('terrain-map-checkbox');
     mapCheckbox.addEventListener('change', function() {
       if (this.checked) {
-        map.setLayoutProperty('satellite-map', 'visibility', 'visible');
+        map.setLayoutProperty('outdoor-map', 'visibility', 'visible');
       } else {
-        map.setLayoutProperty('satellite-map', 'visibility', 'none');
+        map.setLayoutProperty('outdoor-map', 'visibility', 'none');
       }
     });
 
@@ -200,20 +199,10 @@ export function MapBox({
 
     // Draw polygons
     map.on('load', function () {
-      map.addSource("mapbox-satellite", {
-        "type": "raster",
-        "url": "mapbox://mapbox.satellite"
-      });
-      map.addLayer({
-        "type": "raster",
-        "id": 'satellite-map',
-        "source": "mapbox-satellite",
-        'layout': {
-          'visibility': 'none'
-        },
-      });
 
       addSources(map);
+
+      addOutdoorMap(map);
 
       addPlacesLayers(map);
 
@@ -301,6 +290,17 @@ export function MapBox({
     } catch (e) {
       // Catch the odd disappearing map
     }
+  }
+
+  function addOutdoorMap(map) {
+    map.addLayer({
+      "type": "raster",
+      "id": 'outdoor-map',
+      "source": "maptiler-map",
+      'layout': {
+        'visibility': 'none'
+      },
+    });
   }
 
   // Update FeatureCollection data
