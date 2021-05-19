@@ -182,6 +182,7 @@ function App({activeTable, activeView, settings}) {
               label="Conditions"
               size="small"
               width="auto"
+              marginRight={2}
             />
           </Tooltip>
 
@@ -195,12 +196,19 @@ function App({activeTable, activeView, settings}) {
                onChange={newValue => setShowLabels(newValue)}
                label="Labels"
                size="small"
-               width="auto"/>
+               width="auto"
+               marginRight={2}/>
           </Tooltip>
 
           <div id="menu">
-            <input type="checkbox" id="terrain-map-checkbox" name="terrain-map"/>
-            <label htmlFor="terrain-map">Terrain map</label>
+            <input id="histogenes-radio" type="radio" name="rtoggle" value="histogenes"/>
+            <label htmlFor="histogenes-radio">base</label>
+            <input id="structures-radio" type="radio" name="rtoggle" value="structures"/>
+            <label htmlFor="structures-radio">with structures</label>
+            <input id="outdoor-radio" type="radio" name="rtoggle" value="outdoor"/>
+            <label htmlFor="outdoor-radio">outdoor</label>
+            <input id="white-radio" type="radio" name="rtoggle" value="white"/>
+            <label htmlFor="white-radio">white</label>
           </div>
         </Box>
         {editMode ? (

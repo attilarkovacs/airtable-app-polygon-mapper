@@ -171,6 +171,8 @@ export function MapBox({
   const accessToken = settings.mapboxAccessToken;
   // Initialize map when component mounts
   useEffect(() => {
+    document.getElementById("histogenes-radio").checked = true;
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
@@ -178,14 +180,40 @@ export function MapBox({
       zoom: zoom
     });
 
-    const mapCheckbox = document.getElementById('terrain-map-checkbox');
-    mapCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        map.setLayoutProperty('outdoor-map', 'visibility', 'visible');
-      } else {
-        map.setLayoutProperty('outdoor-map', 'visibility', 'none');
-      }
-    });
+    const outdoorMap = document.getElementById('outdoor-radio');
+    outdoorMap.onclick = function () {
+      map.setLayoutProperty('outdoor-map', 'visibility', 'visible');
+      map.setLayoutProperty('white-map', 'visibility', 'none');
+      setStructureLabels('none');
+    }
+
+    const histogenesMap = document.getElementById('histogenes-radio');
+    histogenesMap.onclick = function () {
+      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
+      map.setLayoutProperty('white-map', 'visibility', 'none');
+      setStructureLabels('none');
+    }
+
+    const structuresMap = document.getElementById('structures-radio');
+    structuresMap.onclick = function () {
+      setStructureLabels('visible');
+      map.setLayoutProperty('white-map', 'visibility', 'none');
+      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
+    }
+
+    const whiteBackground = document.getElementById('white-radio');
+    whiteBackground.onclick = function () {
+      map.setLayoutProperty('white-map', 'visibility', 'visible');
+      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
+      setStructureLabels('none');
+    }
+
+    function setStructureLabels(visibility) {
+      map.setLayoutProperty('admin_str', 'visibility', visibility);
+      map.setLayoutProperty('aeroway_str', 'visibility', visibility);
+      map.setLayoutProperty('building_str', 'visibility', visibility);
+      map.setLayoutProperty('road_str', 'visibility', visibility);
+    }
 
     // Map controls
     map.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -203,6 +231,10 @@ export function MapBox({
       addSources(map);
 
       addOutdoorMap(map);
+
+      addStructures(map);
+
+      addWhiteLayer(map);
 
       addPlacesLayers(map);
 
@@ -294,12 +326,78 @@ export function MapBox({
 
   function addOutdoorMap(map) {
     map.addLayer({
-      "type": "raster",
-      "id": 'outdoor-map',
-      "source": "maptiler-map",
+      'id': 'outdoor-map',
+      'type': "raster",
+      'source': "maptiler-map",
       'layout': {
         'visibility': 'none'
+      }
+    });
+  }
+
+  function addWhiteLayer(map) {
+    map.addLayer({
+      'id': 'white-map',
+      'type': 'background',
+      'paint': {
+         'background-color': 'white'
+       },
+      'layout': {
+        'visibility': 'none'
+      }
+    });
+  }
+
+  function addStructures(map) {
+    map.addLayer({
+      'id': 'admin_str',
+      'source': 'mapbox-streets',
+      'source-layer': 'admin',
+      'type': 'line',
+      "filter": ["==", ["get", "admin_level"], 0],
+      'paint': {
+        'line-color': 'rgba(255, 187, 0, 1)',
+        'line-width' : 2
       },
+      'layout': {
+        'visibility': 'none'
+      }
+    });
+
+    map.addLayer({
+      "id": "aeroway_str",
+      "source": "mapbox-streets",
+      "source-layer": "aeroway",
+      "type": "line",
+      "paint": {
+        "line-color": "#ffffff"
+      },
+      'layout': {
+        'visibility': 'none'
+      }
+    });
+
+    map.addLayer({
+      "id": "building_str",
+      "source": "mapbox-streets",
+      "source-layer": "building",
+      "type": "fill",
+      'layout': {
+        'visibility': 'none'
+      }
+    });
+
+    map.addLayer({
+      "id": "road_str",
+      "source": "mapbox-streets",
+      "source-layer": "road",
+      "type": "line",
+      "paint": {
+        "line-color": "#ffffff"
+      },
+      'layout': {
+        'visibility': 'none'
+      }
     });
   }
 

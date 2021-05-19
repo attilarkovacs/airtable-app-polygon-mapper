@@ -9,6 +9,11 @@ export default function addSources(map) {
     "url": "https://api.maptiler.com/maps/outdoor/tiles.json?key=l4KOlIA8NVQMv9dm4S21"
   });
 
+  map.addSource("mapbox-streets", {
+    "type": "vector",
+    "url": "mapbox://mapbox.mapbox-streets-v8"
+  });
+
   map.addSource('places', {
     'type': 'geojson',
     'data': {
