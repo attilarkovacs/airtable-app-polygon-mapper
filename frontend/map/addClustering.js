@@ -4,6 +4,7 @@
  * @param map mapboxgl.Map
  */
 export default function addClustering(map) {
+  removeIfExists('clusters', map);
   map.addLayer({
     id: 'clusters',
     type: 'circle',
@@ -36,6 +37,7 @@ export default function addClustering(map) {
     }
   });
 
+  removeIfExists('cluster-count', map);
   map.addLayer({
     id: 'cluster-count',
     type: 'symbol',
@@ -66,4 +68,11 @@ export default function addClustering(map) {
       }
     );
   });
+
+  function removeIfExists(id, map) {
+    const mapLayer = map.getLayer(id);
+    if (typeof mapLayer !== 'undefined') {
+      map.removeLayer(id)
+    }
+  }
 }

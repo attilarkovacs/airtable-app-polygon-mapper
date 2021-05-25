@@ -19,10 +19,12 @@ import {RasterOpacityControl} from "./RasterOpacityControl";
 import addClustering from '../map/addClustering';
 import {addHover, setHoverFillOpacity} from "../map/addHover";
 import {removeImageSources, updateImageSources} from "../map/addImagesSources";
-import {addPlacesLayers, setPlacesFillOpacity} from "../map/addPlacesLayers";
+import {addPlacesLayers, setPlacesFillOpacity, removeIfExists} from "../map/addPlacesLayers";
 import addSources from "../map/addSources";
 import zoomSelected from '../map/zoomSelected';
 import {getRecordsById} from "../lib/getRecordsById";
+
+let mapType = '';
 
 export function MapBox({
                          // properties
@@ -34,7 +36,6 @@ export function MapBox({
                          allRecords,
                          selectedRecordIds,
                          showBackgrounds,
-                         showLabels,
                          showColors,
 
                          // functions
@@ -42,7 +43,6 @@ export function MapBox({
                          setJsonErrorRecords,
                          setMap,
                        }) {
-
   const mapContainerRef = useRef(null);
 
   const [features, setFeatures] = useState([]);
@@ -53,7 +53,7 @@ export function MapBox({
 
   const {settings} = useSettings();
   const geometryField = settings.geometryField;
-  const labelField = settings.labelField && activeTable.getFieldByNameIfExists(settings.labelField) ? settings.labelField : activeTable.primaryField ;
+  const labelField = settings.labelField && activeTable.getFieldByNameIfExists(settings.labelField) ? settings.labelField : activeTable.primaryField;
   mapboxgl.accessToken = settings.mapboxAccessToken;
 
   function parseFeatures() {
@@ -68,9 +68,9 @@ export function MapBox({
           id: record.id,
           properties: {
             id: record.id,
-            name: showLabels
-                      ? record.getCellValueAsString(labelField)
-                      : "",
+            name: isSwitched('labels-switch')
+                ? record.getCellValueAsString(labelField)
+                : "",
             selected: selectedRecordIds.includes(record.id),
             invisible: selectedIds.includes(record.id),
           }
@@ -94,7 +94,6 @@ export function MapBox({
         }
 
         return source;
-
       } catch (e) {
         jsonErrorRecords.push(record.id);
         return null;
@@ -106,6 +105,52 @@ export function MapBox({
     }
 
     setJsonErrorRecords(jsonErrorRecords);
+  }
+
+  function addEvents(map) {
+    map.on('click', 'places-fill', function (e) {
+      // Check if click is on top of a new shape.
+      const isNewShape = polygonEditor.isActive(map) && map.queryRenderedFeatures(e.point)
+          .some(feature => feature.source.substring(0, 15) === 'mapbox-gl-draw-');
+
+      // Prevent changing records while drawing a new shape or clicking on a new shape.
+      if (!polygonEditor.isDrawing() && !isNewShape) {
+        selectRecord(e.features[0].properties.id);
+      }
+
+      // When a click event occurs on a feature in the places layer, open a popup at the
+      // location of the click, with description HTML from its properties.
+      // Popup Tooltip
+      // new mapboxgl.Popup()
+      // .setLngLat(e.lngLat)
+      // .setHTML(e.features[0].properties.name)
+      // .addTo(map);
+    });
+
+    map.on('click', function (e) {
+      const features = map.queryRenderedFeatures(e.point, {layers: ['places-fill']});
+      const isActive = polygonEditor.isActive(map);
+      const isDrawing = polygonEditor.isDrawing();
+
+      if (!isDrawing && !isActive && features.length === 0) {
+        selectRecord();
+      }
+    });
+
+    const labelsDebounce = debounce(() => updateMapPolygons(map), 500);
+    map.on('sourcedata', (e) => {
+      if (e.sourceId === 'labels') {
+        labelsDebounce();
+      }
+    });
+    map.on('zoomend', labelsDebounce);
+    map.on('moveend', labelsDebounce);
+
+    // Add Map to state
+    setMap(map);
+
+    // Update FeatureCollection data
+    updateMap();
   }
 
   const labels = features.map(feature => {
@@ -172,7 +217,6 @@ export function MapBox({
   // Initialize map when component mounts
   useEffect(() => {
     document.getElementById("histogenes-radio").checked = true;
-
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
@@ -180,39 +224,64 @@ export function MapBox({
       zoom: zoom
     });
 
+    const mapRadios = document.getElementsByName('map-radio');
+    for (let i = 0; i < mapRadios.length; i++) {
+      mapRadios[i].addEventListener('change', changeSwitched);
+    }
+
     const outdoorMap = document.getElementById('outdoor-radio');
-    outdoorMap.onclick = function () {
-      map.setLayoutProperty('outdoor-map', 'visibility', 'visible');
+    outdoorMap.onclick = function() {
+      if (map.getStyle().name !== 'Mapbox Outdoors') {
+        map.setStyle('mapbox://styles/mapbox/outdoors-v11');
+        map.on('style.load', function() {
+          addSources(map);
+          addLayers(map);
+          addEvents(map);
+          parseFeatures();
+        });
+      }
       map.setLayoutProperty('white-map', 'visibility', 'none');
-      setStructureLabels('none');
     }
 
     const histogenesMap = document.getElementById('histogenes-radio');
-    histogenesMap.onclick = function () {
-      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
+    histogenesMap.onclick = function() {
+      if (map.getStyle().name !== 'Histogenes') {
+        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+        map.on('style.load', function () {
+          addSources(map);
+          addLayers(map);
+          addEvents(map);
+          parseFeatures();
+        });
+      }
+      if (structureMapLoaded(map)) {
+        setStructureLabels(map,'none');
+      }
       map.setLayoutProperty('white-map', 'visibility', 'none');
-      setStructureLabels('none');
     }
 
     const structuresMap = document.getElementById('structures-radio');
-    structuresMap.onclick = function () {
-      setStructureLabels('visible');
-      map.setLayoutProperty('white-map', 'visibility', 'none');
-      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
+    structuresMap.onclick = function() {
+      if (map.getStyle().name !== 'Histogenes') {
+        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+        map.on('style.load', function () {
+          addSources(map);
+          addLayers(map);
+          addEvents(map);
+          parseFeatures();
+          setStructureLabels(map,'visible');
+          map.setLayoutProperty('white-map', 'visibility', 'none');
+        });
+      } else if (!structureMapLoaded(map)) {
+        setStructureLabels(map,'visible');
+        map.setLayoutProperty('white-map', 'visibility', 'none');
+      }
     }
 
     const whiteBackground = document.getElementById('white-radio');
-    whiteBackground.onclick = function () {
+    whiteBackground.onclick = function() {
       map.setLayoutProperty('white-map', 'visibility', 'visible');
-      map.setLayoutProperty('outdoor-map', 'visibility', 'none');
-      setStructureLabels('none');
-    }
-
-    function setStructureLabels(visibility) {
-      map.setLayoutProperty('admin_str', 'visibility', visibility);
-      map.setLayoutProperty('aeroway_str', 'visibility', visibility);
-      map.setLayoutProperty('building_str', 'visibility', visibility);
-      map.setLayoutProperty('road_str', 'visibility', visibility);
+      setStructureLabels(map, 'none');
     }
 
     // Map controls
@@ -227,79 +296,9 @@ export function MapBox({
 
     // Draw polygons
     map.on('load', function () {
-
       addSources(map);
-
-      addOutdoorMap(map);
-
-      addStructures(map);
-
-      addWhiteLayer(map);
-
-      addPlacesLayers(map);
-
-      map.addLayer({
-        'id': 'labels-text',
-        'type': 'symbol',
-        'source': 'labels',
-        'layout': {
-          'text-field': ['get', 'name'],
-          'text-variable-anchor': ['center'],
-          'text-justify': 'auto',
-          'text-allow-overlap': true,
-          'text-size': 14,
-        },
-        'filter': ['!', ['has', 'point_count']],
-      });
-
-      addClustering(map);
-
-      // Adds additional fill layer and events
-      addHover(map);
-
-      map.on('click', 'places-fill', function (e) {
-        // Check if click is on top of a new shape.
-        const isNewShape = polygonEditor.isActive(map) && map.queryRenderedFeatures(e.point)
-          .some(feature => feature.source.substring(0, 15) === 'mapbox-gl-draw-');
-
-        // Prevent changing records while drawing a new shape or clicking on a new shape.
-        if (!polygonEditor.isDrawing() && !isNewShape) {
-          selectRecord(e.features[0].properties.id);
-        }
-
-        // When a click event occurs on a feature in the places layer, open a popup at the
-        // location of the click, with description HTML from its properties.
-        // Popup Tooltip
-        // new mapboxgl.Popup()
-        // .setLngLat(e.lngLat)
-        // .setHTML(e.features[0].properties.name)
-        // .addTo(map);
-      });
-
-      map.on('click', function (e) {
-        const features = map.queryRenderedFeatures(e.point, {layers: ['places-fill']});
-        const isActive = polygonEditor.isActive(map);
-        const isDrawing = polygonEditor.isDrawing();
-
-        if (!isDrawing && !isActive && features.length === 0) {
-          selectRecord();
-        }
-      });
-
-      const labelsDebounce = debounce(() => updateMapPolygons(map), 500);
-      map.on('sourcedata', (e) => {
-        if (e.sourceId === 'labels') {
-          labelsDebounce();
-        }
-      });
-      map.on('zoomend', labelsDebounce);
-      map.on('moveend', labelsDebounce);
-
-      // Add Map to state
-      setMap(map);
-
-      // Update FeatureCollection data
-      updateMap();
+      addLayers(map);
+      addEvents(map);
     });
 
     // Clean up on unmount
@@ -312,9 +311,9 @@ export function MapBox({
   function updateMapPolygons(map) {
     try {
       const features = map.querySourceFeatures('labels', {sourceLayer: 'labels-text'})
-        .filter(feature => !feature.id)
-        .filter((v, i, a) => a.findIndex(t => t.properties.id === v.properties.id) === i) //Attila: this is to remove duplicates
-        .map(f => JSON.parse(f.properties.original));
+          .filter(feature => !feature.id)
+          .filter((v, i, a) => a.findIndex(t => t.properties.id === v.properties.id) === i) //Attila: this is to remove duplicates
+          .map(f => JSON.parse(f.properties.original));
       map.getSource('places').setData({
         type: 'FeatureCollection',
         features
@@ -322,83 +321,6 @@ export function MapBox({
     } catch (e) {
       // Catch the odd disappearing map
     }
-  }
-
-  function addOutdoorMap(map) {
-    map.addLayer({
-      'id': 'outdoor-map',
-      'type': "raster",
-      'source': "maptiler-map",
-      'layout': {
-        'visibility': 'none'
-      }
-    });
-  }
-
-  function addWhiteLayer(map) {
-    map.addLayer({
-      'id': 'white-map',
-      'type': 'background',
-      'paint': {
-         'background-color': 'white'
-       },
-      'layout': {
-        'visibility': 'none'
-      }
-    });
-  }
-
-  function addStructures(map) {
-    map.addLayer({
-      'id': 'admin_str',
-      'source': 'mapbox-streets',
-      'source-layer': 'admin',
-      'type': 'line',
-      "filter": ["==", ["get", "admin_level"], 0],
-      'paint': {
-        'line-color': 'rgba(255, 187, 0, 1)',
-        'line-width' : 2
-      },
-      'layout': {
-        'visibility': 'none'
-      }
-    });
-
-    map.addLayer({
-      "id": "aeroway_str",
-      "source": "mapbox-streets",
-      "source-layer": "aeroway",
-      "type": "line",
-      "paint": {
-        "line-color": "#ffffff"
-      },
-      'layout': {
-        'visibility': 'none'
-      }
-    });
-
-    map.addLayer({
-      "id": "building_str",
-      "source": "mapbox-streets",
-      "source-layer": "building",
-      "type": "fill",
-      'layout': {
-        'visibility': 'none'
-      }
-    });
-
-    map.addLayer({
-      "id": "road_str",
-      "source": "mapbox-streets",
-      "source-layer": "road",
-      "type": "line",
-      "paint": {
-        "line-color": "#ffffff"
-      },
-      'layout': {
-        'visibility': 'none'
-      }
-    });
   }
 
   // Update FeatureCollection data
@@ -425,7 +347,7 @@ export function MapBox({
     if (selectedRecordIds.length > 0) {
       // If all selected records don't have any geometry, don't zoom
       const nonemptyGeometryRecords = getRecordsById(records, selectedRecordIds)
-        .filter(record => record.getCellValue(geometryField));
+          .filter(record => record.getCellValue(geometryField));
       if (nonemptyGeometryRecords.length === 0) {
         return;
       }
@@ -443,39 +365,156 @@ export function MapBox({
   }, [features, map]);
 
   return (
-    <>
-      <Box
-        display="none"
-        position="absolute"
-        top={0}
-        left={0}
-        zIndex="5"
-        margin={2}
-        padding={2}
-        backgroundColor="grayDark1">
-        <Text textColor="white">
-          Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
-        </Text>
-      </Box>
-      {showBackgrounds && <RasterOpacityControl map={map}/>}
-      <div
-        className="map-container"
-        ref={mapContainerRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-        }}/>
-      {settings.images.table && initialized && (
-        <ImageSourceRecords activeTable={activeTable} map={map} settings={settings.images} show={showBackgrounds}/>
-      )}
-    </>
+      <>
+        <Box
+            display="none"
+            position="absolute"
+            top={0}
+            left={0}
+            zIndex="5"
+            margin={2}
+            padding={2}
+            backgroundColor="grayDark1">
+          <Text textColor="white">
+            Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
+          </Text>
+        </Box>
+        {showBackgrounds && <RasterOpacityControl map={map}/>}
+        <div
+            className="map-container"
+            ref={mapContainerRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+            }}/>
+        {settings.images.table && initialized && (
+            <ImageSourceRecords activeTable={activeTable} map={map} settings={settings.images} show={showBackgrounds} type={mapType}/>
+        )}
+      </>
   );
 }
 
-function ImageSourceRecords({map, settings, show}) {
+function structureMapLoaded(map) {
+  return map.getLayer('admin_str').visibility === 'visible';
+}
+
+function isSwitched(switchId) {
+  const switchElement = document.getElementById(switchId);
+  return switchElement
+          ? switchElement.getAttribute('aria-checked') === 'true'
+          : false;
+}
+
+function changeSwitched() {
+  mapType = this.value;
+}
+
+function setStructureLabels(map, visibility) {
+  map.setLayoutProperty('admin_str', 'visibility', visibility);
+  map.setLayoutProperty('aeroway_str', 'visibility', visibility);
+  map.setLayoutProperty('building_str', 'visibility', visibility);
+  map.setLayoutProperty('road_str', 'visibility', visibility);
+}
+
+function addLayers(map) {
+  addStructures(map);
+  addWhiteLayer(map);
+  addPlacesLayers(map);
+
+  removeIfExists('labels-text', map);
+  map.addLayer({
+    'id': 'labels-text',
+    'type': 'symbol',
+    'source': 'labels',
+    'layout': {
+      'text-field': ['get', 'name'],
+      'text-variable-anchor': ['center'],
+      'text-justify': 'auto',
+      'text-allow-overlap': true,
+      'text-size': 14,
+    },
+    'filter': ['!', ['has', 'point_count']],
+  });
+  addClustering(map);
+  // Adds additional fill layer and events
+  addHover(map);
+}
+
+function addWhiteLayer(map) {
+  removeIfExists('white-map', map);
+  map.addLayer({
+    'id': 'white-map',
+    'type': 'background',
+    'paint': {
+      'background-color': 'white'
+    },
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+}
+
+function addStructures(map) {
+  removeIfExists('admin_str', map);
+  map.addLayer({
+    'id': 'admin_str',
+    'source': 'mapbox-streets',
+    'source-layer': 'admin',
+    'type': 'line',
+    "filter": ["==", ["get", "admin_level"], 0],
+    'paint': {
+      'line-color': 'rgba(255, 187, 0, 1)',
+      'line-width': 2
+    },
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+
+  removeIfExists('aeroway_str', map);
+  map.addLayer({
+    "id": "aeroway_str",
+    "source": "mapbox-streets",
+    "source-layer": "aeroway",
+    "type": "line",
+    "paint": {
+      "line-color": "#ffffff"
+    },
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+
+  removeIfExists('building_str', map);
+  map.addLayer({
+    "id": "building_str",
+    "source": "mapbox-streets",
+    "source-layer": "building",
+    "type": "fill",
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+
+  removeIfExists('road_str', map);
+  map.addLayer({
+    "id": "road_str",
+    "source": "mapbox-streets",
+    "source-layer": "road",
+    "type": "line",
+    "paint": {
+      "line-color": "#ffffff"
+    },
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+}
+
+function ImageSourceRecords({map, settings, show, type}) {
   const [sourceRecords, setSourceRecords] = useState([]);
   const base = useBase();
   const table = base.getTableById(settings.table);
@@ -496,7 +535,7 @@ function ImageSourceRecords({map, settings, show}) {
     } else {
       removeImageSources(map);
     }
-  }, [show, sourceRecords]);
+  }, [type, show, sourceRecords]);
 
   return (<></>);
 }

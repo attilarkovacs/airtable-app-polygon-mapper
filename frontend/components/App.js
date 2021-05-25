@@ -191,25 +191,28 @@ function App({activeTable, activeView, settings}) {
              placementX={Tooltip.placements.CENTER}
              placementY={Tooltip.placements.BOTTOM}
              shouldHideTooltipOnClick={true}>
-             <Switch
+          <Switch
+               id={'labels-switch'}
                value={showLabels}
                onChange={newValue => setShowLabels(newValue)}
                label="Labels"
                size="small"
                width="auto"
-               marginRight={2}/>
+               marginRight={4}/>
           </Tooltip>
 
-          <div id="menu">
-            <input id="histogenes-radio" type="radio" name="rtoggle" value="histogenes"/>
-            <label htmlFor="histogenes-radio">base</label>
-            <input id="structures-radio" type="radio" name="rtoggle" value="structures"/>
-            <label htmlFor="structures-radio">with structures</label>
-            <input id="outdoor-radio" type="radio" name="rtoggle" value="outdoor"/>
-            <label htmlFor="outdoor-radio">outdoor</label>
-            <input id="white-radio" type="radio" name="rtoggle" value="white"/>
-            <label htmlFor="white-radio">white</label>
-          </div>
+          <input id="histogenes-radio" type="radio" name="map-radio" value='base'/>
+          <label htmlFor="histogenes-radio">base</label>
+
+          <input id="structures-radio" type="radio" name="map-radio" value='structures'/>
+          <label htmlFor="structures-radio">with structures</label>
+
+          <input id="outdoor-radio" type="radio" name="map-radio" value='outdoor'/>
+          <label htmlFor="outdoor-radio">outdoor</label>
+
+          <input id="white-radio" type="radio" name="map-radio" value='white'/>
+          <label htmlFor="white-radio">white</label>
+
         </Box>
         {editMode ? (
           <Button
@@ -246,7 +249,6 @@ function App({activeTable, activeView, settings}) {
           }}
           setMap={setMap}
           showBackgrounds={showBackgrounds}
-          showLabels={showLabels}
           showColors={showConditions}
         />
       </Box>

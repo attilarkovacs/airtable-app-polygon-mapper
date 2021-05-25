@@ -7,6 +7,11 @@ const filter = [
 const fillOpacity = 0.85;
 
 export function addHover(map) {
+  const mapLayer = map.getLayer('places-hover');
+  if (typeof mapLayer !== 'undefined') {
+    map.removeLayer('places-hover')
+  }
+
   // Hover Layer
   map.addLayer({
     'id': 'places-hover',
