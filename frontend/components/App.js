@@ -139,7 +139,7 @@ function App({activeTable, activeView, settings}) {
               size="small"
               icon="warning"
               variant="danger"
-              marginRight={2}
+              marginRight={1}
               aria-label="GeoJSON Error"
             />
           )}
@@ -150,7 +150,7 @@ function App({activeTable, activeView, settings}) {
               options={appMode}
               size="small"
               width="160px"
-              marginRight={2}
+              marginRight={1}
             />
           )}
           {settings.images.table && (
@@ -166,7 +166,7 @@ function App({activeTable, activeView, settings}) {
                 label="Background"
                 size="small"
                 width="auto"
-                marginRight={2}
+                marginRight={1}
               />
             </Tooltip>
           )}
@@ -182,7 +182,7 @@ function App({activeTable, activeView, settings}) {
               label="Conditions"
               size="small"
               width="auto"
-              marginRight={2}
+              marginRight={1}
             />
           </Tooltip>
 
@@ -198,7 +198,7 @@ function App({activeTable, activeView, settings}) {
                label="Labels"
                size="small"
                width="auto"
-               marginRight={4}/>
+               marginRight={2}/>
           </Tooltip>
 
           <input id="histogenes-radio" type="radio" name="map-radio" value='base'/>
