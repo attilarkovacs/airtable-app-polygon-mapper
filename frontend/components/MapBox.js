@@ -216,96 +216,101 @@ export function MapBox({
   const accessToken = settings.mapboxAccessToken;
   // Initialize map when component mounts
   useEffect(() => {
-    document.getElementById("histogenes-radio").checked = true;
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
-      center: [lng, lat],
-      zoom: zoom
-    });
 
-    const mapRadios = document.getElementsByName('map-radio');
-    for (let i = 0; i < mapRadios.length; i++) {
-      mapRadios[i].addEventListener('change', changeSwitched);
-    }
-
-    const outdoorMap = document.getElementById('outdoor-radio');
-    outdoorMap.onclick = function() {
-      if (map.getStyle().name !== 'Mapbox Outdoors') {
-        map.setStyle('mapbox://styles/mapbox/outdoors-v11');
-        map.on('style.load', function() {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
+    try {
+        document.getElementById("histogenes-radio").checked = true;
+        const map = new mapboxgl.Map({
+          container: mapContainerRef.current,
+          style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
+          center: [lng, lat],
+          zoom: zoom
         });
-      }
-      map.setLayoutProperty('white-map', 'visibility', 'none');
-    }
 
-    const histogenesMap = document.getElementById('histogenes-radio');
-    histogenesMap.onclick = function() {
-      if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
-        map.on('style.load', function () {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
-        });
-      }
-      if (structureMapLoaded(map)) {
-        setStructureLabels(map,'none');
-      }
-      map.setLayoutProperty('white-map', 'visibility', 'none');
-    }
+        const mapRadios = document.getElementsByName('map-radio');
+        for (let i = 0; i < mapRadios.length; i++) {
+          mapRadios[i].addEventListener('change', changeSwitched);
+        }
 
-    const structuresMap = document.getElementById('structures-radio');
-    structuresMap.onclick = function() {
-      if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
-        map.on('style.load', function () {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
-          setStructureLabels(map,'visible');
+        const outdoorMap = document.getElementById('outdoor-radio');
+        outdoorMap.onclick = function() {
+          if (map.getStyle().name !== 'Mapbox Outdoors') {
+            map.setStyle('mapbox://styles/mapbox/outdoors-v11');
+            map.on('style.load', function() {
+              addSources(map);
+              addLayers(map);
+              addEvents(map);
+              parseFeatures();
+            });
+          }
           map.setLayoutProperty('white-map', 'visibility', 'none');
+        }
+
+        const histogenesMap = document.getElementById('histogenes-radio');
+        histogenesMap.onclick = function() {
+          if (map.getStyle().name !== 'Histogenes') {
+            map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+            map.on('style.load', function () {
+              addSources(map);
+              addLayers(map);
+              addEvents(map);
+              parseFeatures();
+            });
+          }
+          if (structureMapLoaded(map)) {
+            setStructureLabels(map,'none');
+          }
+          map.setLayoutProperty('white-map', 'visibility', 'none');
+        }
+
+        const structuresMap = document.getElementById('structures-radio');
+        structuresMap.onclick = function() {
+          if (map.getStyle().name !== 'Histogenes') {
+            map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+            map.on('style.load', function () {
+              addSources(map);
+              addLayers(map);
+              addEvents(map);
+              parseFeatures();
+              setStructureLabels(map,'visible');
+              map.setLayoutProperty('white-map', 'visibility', 'none');
+            });
+          } else if (!structureMapLoaded(map)) {
+            setStructureLabels(map,'visible');
+            map.setLayoutProperty('white-map', 'visibility', 'none');
+          }
+        }
+
+        const whiteBackground = document.getElementById('white-radio');
+        whiteBackground.onclick = function() {
+          map.setLayoutProperty('white-map', 'visibility', 'visible');
+          setStructureLabels(map, 'none');
+        }
+
+        // Map controls
+        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.on('move', () => {
+          setLng(+(map.getCenter().lng.toFixed(4)));
+          setLat(+(map.getCenter().lat.toFixed(4)));
+          setZoom(+(map.getZoom().toFixed(2)));
         });
-      } else if (!structureMapLoaded(map)) {
-        setStructureLabels(map,'visible');
-        map.setLayoutProperty('white-map', 'visibility', 'none');
+
+        polygonEditor.init(map);
+
+        // Draw polygons
+        map.on('load', function () {
+          addSources(map);
+          addLayers(map);
+          addEvents(map);
+        });
+
+        // Clean up on unmount
+        return () => {
+          map.remove();
+          setMap(null);
+        };
+      } catch (e) {
+          console.log('EATKOVC --- E')
       }
-    }
-
-    const whiteBackground = document.getElementById('white-radio');
-    whiteBackground.onclick = function() {
-      map.setLayoutProperty('white-map', 'visibility', 'visible');
-      setStructureLabels(map, 'none');
-    }
-
-    // Map controls
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.on('move', () => {
-      setLng(+(map.getCenter().lng.toFixed(4)));
-      setLat(+(map.getCenter().lat.toFixed(4)));
-      setZoom(+(map.getZoom().toFixed(2)));
-    });
-
-    polygonEditor.init(map);
-
-    // Draw polygons
-    map.on('load', function () {
-      addSources(map);
-      addLayers(map);
-      addEvents(map);
-    });
-
-    // Clean up on unmount
-    return () => {
-      map.remove();
-      setMap(null);
-    };
   }, []);
 
   function updateMapPolygons(map) {
