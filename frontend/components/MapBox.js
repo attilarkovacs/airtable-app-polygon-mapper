@@ -280,7 +280,12 @@ export function MapBox({
 
     const whiteBackground = document.getElementById('white-radio');
     whiteBackground.onclick = function() {
-      map.setLayoutProperty('white-map', 'visibility', 'visible');
+      // map.setLayoutProperty('white-map', 'visibility', 'visible');
+      map.setLayoutProperty('background', 'visibility', 'visible');
+      map.setLayoutProperty('mapbox-terrain-rgb', 'visibility', 'visible');
+      map.setLayoutProperty('hillshade-1', 'visibility', 'visible');
+      map.setLayoutProperty('roman-roads-12ig1q', 'visibility', 'visible');
+
       setStructureLabels(map, 'none');
     }
 
@@ -455,6 +460,64 @@ function addWhiteLayer(map) {
       'visibility': 'none'
     }
   });
+
+
+  /////// TEST
+  map.addLayer({
+    'id': 'background',
+    'type': 'background',
+    'paint': {
+      "background-color": "hsl(172, 1%, 88%)"
+    },
+    'layout': {
+      'visibility': 'none'
+    }
+  });
+
+  map.addLayer({
+    'id': 'mapbox-terrain-rgb',
+    'type': 'hillshade',
+    "paint": {
+      "hillshade-exaggeration": 1,
+      "hillshade-illumination-direction": 359
+    },
+    'layout': {
+      'visibility': 'none'
+    },
+    "source": "mapbox://mapbox.terrain-rgb"
+  });
+
+  map.addLayer({
+    'id': 'hillshade-1',
+    'type': 'fill',
+    "paint": {
+      "fill-opacity": 0.08,
+      "fill-color": "hsla(0, 0%, 0%, 0.02)"
+    },
+    'layout': {
+      'visibility': 'none'
+    },
+    "source": "composite-1",
+    "source-layer": "hillshade",
+    "metadata": {
+      "mapbox:group": "cab8558e3cdf86aa1b63faf70cb4fe96"
+    }
+  });
+  map.addLayer({
+    'id': 'roman-roads-12ig1q',
+    'type': 'line',
+    "paint": {
+      "line-color": "hsl(0, 78%, 49%)",
+      "line-width": 0.4
+    },
+    'layout': {
+      'visibility': 'none'
+    },
+    "source": "composite-1",
+    "source-layer": "Roman_Roads-12ig1q"
+  });
+
+  /////// TEST - END
 }
 
 function addStructures(map) {

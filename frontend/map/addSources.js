@@ -22,6 +22,23 @@ export default function addSources(map) {
     });
   }
 
+
+  ////////////TEST//////////////////
+
+    map.addSource('mapbox://mapbox.terrain-rgb', {
+      'type': 'raster-dem',
+      "url": "mapbox://mapbox.terrain-rgb",
+      "tileSize": 256
+    });
+
+  map.addSource('composite-1', {
+    'type': 'vector',
+    "url": "mapbox://mapbox.mapbox-streets-v8,benci.32tn9yzr,benci.082szyoz,mapbox.mapbox-terrain-v2"
+  });
+
+
+  /////////TEST - END///////////////
+
   if (typeof map.getSource('labels') === 'undefined') {
     map.addSource('labels', {
       'type': 'geojson',
