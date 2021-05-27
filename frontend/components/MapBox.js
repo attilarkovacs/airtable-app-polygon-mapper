@@ -213,10 +213,10 @@ export function MapBox({
     }
   }, [activeTable, map, settings.images.table]);
 
-  const accessToken = settings.mapboxAccessToken;
   // Initialize map when component mounts
   useEffect(() => {
-    document.getElementById("outdoor-radio").checked = true;
+    document.getElementById("histogenes-radio").checked = true;
+
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: 'mapbox://styles/mapbox/outdoors-v11',
@@ -231,62 +231,30 @@ export function MapBox({
 
     const outdoorMap = document.getElementById('outdoor-radio');
     outdoorMap.onclick = function() {
-      if (map.getStyle().name !== 'Mapbox Outdoors') {
-        map.setStyle('mapbox://styles/mapbox/outdoors-v11');
-        map.on('style.load', function() {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
-        });
-      }
       map.setLayoutProperty('white-map', 'visibility', 'none');
+      setTerrainWithRomanRoads(map, 'none');
+      setStructureLabels(map, 'none');
     }
 
     const histogenesMap = document.getElementById('histogenes-radio');
     histogenesMap.onclick = function() {
-      if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckp74mbs40jl818qtrzq0k96s?access_token=${accessToken}`);
-        map.on('style.load', function () {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
-        });
-      }
-      if (structureMapLoaded(map)) {
-        setStructureLabels(map, 'none');
-      }
       map.setLayoutProperty('white-map', 'visibility', 'none');
+      setStructureLabels(map, 'none');
+      setTerrainWithRomanRoads(map, 'visible')
     }
 
     const structuresMap = document.getElementById('structures-radio');
     structuresMap.onclick = function() {
-      if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckp74mbs40jl818qtrzq0k96s?access_token=${accessToken}`);
-        map.on('style.load', function () {
-          addSources(map);
-          addLayers(map);
-          addEvents(map);
-          parseFeatures();
-          setStructureLabels(map,'visible');
-          map.setLayoutProperty('white-map', 'visibility', 'none');
-        });
-      } else if (!structureMapLoaded(map)) {
-        setStructureLabels(map,'visible');
-        map.setLayoutProperty('white-map', 'visibility', 'none');
-      }
+      setStructureLabels(map,'visible');
+      map.setLayoutProperty('white-map', 'visibility', 'none');
+      setTerrainWithRomanRoads(map, 'visible')
     }
 
     const whiteBackground = document.getElementById('white-radio');
     whiteBackground.onclick = function() {
-      // map.setLayoutProperty('white-map', 'visibility', 'visible');
-      map.setLayoutProperty('background', 'visibility', 'visible');
-      map.setLayoutProperty('mapbox-terrain-rgb', 'visibility', 'visible');
-      map.setLayoutProperty('hillshade-1', 'visibility', 'visible');
-      map.setLayoutProperty('roman-roads-12ig1q', 'visibility', 'visible');
-
       setStructureLabels(map, 'none');
+      setTerrainWithRomanRoads(map, 'none');
+      map.setLayoutProperty('white-map', 'visibility', 'visible');
     }
 
     // Map controls
@@ -299,10 +267,16 @@ export function MapBox({
 
     polygonEditor.init(map);
 
+    map.on('style.load', function () {
+      addSources(map);
+      addTerrainWithRomanRoadsLayers(map);
+      setTerrainWithRomanRoads(map, 'visible');
+    });
+
     // Draw polygons
     map.on('load', function () {
-      addSources(map);
       addLayers(map);
+      addStructures(map);
       addEvents(map);
     });
 
@@ -402,10 +376,6 @@ export function MapBox({
   );
 }
 
-function structureMapLoaded(map) {
-  return map.getLayer('admin_str').visibility === 'visible';
-}
-
 function isSwitched(switchId) {
   const switchElement = document.getElementById(switchId);
   return switchElement
@@ -424,12 +394,17 @@ function setStructureLabels(map, visibility) {
   map.setLayoutProperty('road_str', 'visibility', visibility);
 }
 
+function setTerrainWithRomanRoads(map, visibility) {
+  map.setLayoutProperty('background', 'visibility', visibility);
+  map.setLayoutProperty('mapbox-terrain-rgb', 'visibility', visibility);
+  map.setLayoutProperty('hillshade-1', 'visibility', visibility);
+  map.setLayoutProperty('roman-roads-12ig1q', 'visibility', visibility);
+}
+
 function addLayers(map) {
-  addStructures(map);
   addWhiteLayer(map);
   addPlacesLayers(map);
 
-  removeIfExists('labels-text', map);
   map.addLayer({
     'id': 'labels-text',
     'type': 'symbol',
@@ -449,7 +424,6 @@ function addLayers(map) {
 }
 
 function addWhiteLayer(map) {
-  removeIfExists('white-map', map);
   map.addLayer({
     'id': 'white-map',
     'type': 'background',
@@ -460,9 +434,9 @@ function addWhiteLayer(map) {
       'visibility': 'none'
     }
   });
+}
 
-
-  /////// TEST
+function addTerrainWithRomanRoadsLayers(map) {
   map.addLayer({
     'id': 'background',
     'type': 'background',
@@ -516,12 +490,9 @@ function addWhiteLayer(map) {
     "source": "composite-1",
     "source-layer": "Roman_Roads-12ig1q"
   });
-
-  /////// TEST - END
 }
 
 function addStructures(map) {
-  removeIfExists('admin_str', map);
   map.addLayer({
     'id': 'admin_str',
     'source': 'mapbox-streets',
@@ -537,7 +508,6 @@ function addStructures(map) {
     }
   });
 
-  removeIfExists('aeroway_str', map);
   map.addLayer({
     "id": "aeroway_str",
     "source": "mapbox-streets",
@@ -551,7 +521,6 @@ function addStructures(map) {
     }
   });
 
-  removeIfExists('building_str', map);
   map.addLayer({
     "id": "building_str",
     "source": "mapbox-streets",
@@ -562,7 +531,6 @@ function addStructures(map) {
     }
   });
 
-  removeIfExists('road_str', map);
   map.addLayer({
     "id": "road_str",
     "source": "mapbox-streets",

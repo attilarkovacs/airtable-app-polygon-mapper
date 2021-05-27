@@ -11,7 +11,6 @@ const placesFill_FillOpacity = [
 ];
 
 export function addPlacesLayers(map) {
-  removeIfExists('places-fill', map);
   map.addLayer({
     'id': 'places-fill',
     'type': 'fill',
@@ -29,7 +28,6 @@ export function addPlacesLayers(map) {
     'filter': ['==', 'invisible', false],
   });
 
-  removeIfExists('places-outline', map);
   map.addLayer({
     'id': 'places-outline',
     'type': 'line',
@@ -50,11 +48,4 @@ export function addPlacesLayers(map) {
 
 export function setPlacesFillOpacity(map, normal) {
   map.setPaintProperty('places-fill', 'fill-opacity', normal ? placesFill_FillOpacity : 0);
-}
-
-export function removeIfExists(id, map) {
-  const mapLayer = map.getLayer(id);
-  if (typeof mapLayer !== 'undefined') {
-    map.removeLayer(id)
-  }
 }
