@@ -246,7 +246,7 @@ export function MapBox({
     const histogenesMap = document.getElementById('histogenes-radio');
     histogenesMap.onclick = function() {
       if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckp74mbs40jl818qtrzq0k96s?access_token=${accessToken}`);
         map.on('style.load', function () {
           addSources(map);
           addLayers(map);
@@ -263,7 +263,7 @@ export function MapBox({
     const structuresMap = document.getElementById('structures-radio');
     structuresMap.onclick = function() {
       if (map.getStyle().name !== 'Histogenes') {
-        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`);
+        map.setStyle(`https://api.mapbox.com/styles/v1/benci/ckp74mbs40jl818qtrzq0k96s?access_token=${accessToken}`);
         map.on('style.load', function () {
           addSources(map);
           addLayers(map);
