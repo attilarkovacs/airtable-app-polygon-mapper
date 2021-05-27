@@ -215,7 +215,7 @@ export function MapBox({
 
   // Initialize map when component mounts
   useEffect(() => {
-    document.getElementById("histogenes-radio").checked = true;
+    document.getElementById("outdoor-radio").checked = true;
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -270,7 +270,7 @@ export function MapBox({
     map.on('style.load', function () {
       addSources(map);
       addTerrainWithRomanRoadsLayers(map);
-      setTerrainWithRomanRoads(map, 'visible');
+      // setTerrainWithRomanRoads(map, 'visible'); // UNCOMMENT THIS ONCE raster-dem source issue is resolved
     });
 
     // Draw polygons
