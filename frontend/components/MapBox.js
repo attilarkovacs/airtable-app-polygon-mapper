@@ -216,10 +216,10 @@ export function MapBox({
   const accessToken = settings.mapboxAccessToken;
   // Initialize map when component mounts
   useEffect(() => {
-    document.getElementById("histogenes-radio").checked = true;
+    document.getElementById("outdoor-radio").checked = true;
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
-      style: `https://api.mapbox.com/styles/v1/benci/ckkx3pobf14xb17ocb088pb3q?access_token=${accessToken}`,
+      style: 'mapbox://styles/mapbox/outdoors-v11',
       center: [lng, lat],
       zoom: zoom
     });
@@ -255,7 +255,7 @@ export function MapBox({
         });
       }
       if (structureMapLoaded(map)) {
-        setStructureLabels(map,'none');
+        setStructureLabels(map, 'none');
       }
       map.setLayoutProperty('white-map', 'visibility', 'none');
     }
