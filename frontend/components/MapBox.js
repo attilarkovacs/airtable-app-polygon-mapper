@@ -19,7 +19,7 @@ import {RasterOpacityControl} from "./RasterOpacityControl";
 import addClustering from '../map/addClustering';
 import {addHover, setHoverFillOpacity} from "../map/addHover";
 import {removeImageSources, updateImageSources} from "../map/addImagesSources";
-import {addPlacesLayers, setPlacesFillOpacity} from "../map/addPlacesLayers";
+import {addPlacesLayers, setPlacesFillOpacity, removeIfExists} from "../map/addPlacesLayers";
 import addSources from "../map/addSources";
 import zoomSelected from '../map/zoomSelected';
 import {getRecordsById} from "../lib/getRecordsById";
@@ -215,7 +215,7 @@ export function MapBox({
 
   // Initialize map when component mounts
   useEffect(() => {
-    document.getElementById("histogenes-radio").checked = true;
+    document.getElementById("outdoor-radio").checked = true;
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
@@ -270,7 +270,7 @@ export function MapBox({
     map.on('style.load', function () {
       addSources(map);
       addTerrainWithRomanRoadsLayers(map);
-      setTerrainWithRomanRoads(map, 'visible');
+      // setTerrainWithRomanRoads(map, 'visible'); // UNCOMMENT THIS ONCE raster-dem source issue is resolved
     });
 
     // Draw polygons
@@ -398,7 +398,6 @@ function setTerrainWithRomanRoads(map, visibility) {
   map.setLayoutProperty('background', 'visibility', visibility);
   map.setLayoutProperty('mapbox-terrain-rgb', 'visibility', visibility);
   map.setLayoutProperty('hillshade-1', 'visibility', visibility);
-  map.setLayoutProperty('water-1', 'visibility', visibility);
   map.setLayoutProperty('roman-roads-12ig1q', 'visibility', visibility);
 }
 
@@ -448,40 +447,20 @@ function addTerrainWithRomanRoadsLayers(map) {
       'visibility': 'none'
     }
   });
+
   map.addLayer({
-    "id": "mapbox-terrain-rgb",
-    "type": "fill",
-    "source": "composite",
-    "source-layer": "hillshade",
-    "maxzoom": 16,
+    'id': 'mapbox-terrain-rgb',
+    'type': 'hillshade',
+    "paint": {
+      "hillshade-exaggeration": 1,
+      "hillshade-illumination-direction": 359
+    },
     'layout': {
       'visibility': 'none'
     },
-    "paint": {
-      "fill-color": [
-        "match",
-        ["get", "class"],
-        "shadow",
-        "hsl(203, 0%, 14%)",
-        "hsl(203, 0%, 19%)"
-      ],
-      "fill-opacity": [
-        "interpolate",
-        ["linear"],
-        ["zoom"],
-        14,
-        ["match",
-          ["get", "level"],
-          [67, 56],
-          0.06,
-          [89, 78],
-          0.03, 0.04
-        ],
-        16, 0
-      ],
-      "fill-antialias": false
-    }
+    "source": "mapbox://mapbox.terrain-rgb"
   });
+
   map.addLayer({
     'id': 'hillshade-1',
     'type': 'fill',
@@ -497,20 +476,6 @@ function addTerrainWithRomanRoadsLayers(map) {
     "metadata": {
       "mapbox:group": "cab8558e3cdf86aa1b63faf70cb4fe96"
     }
-  });
-  map.addLayer({
-    'id': 'water-1',
-    'type': 'fill',
-    'paint': {
-      'fill-color': "hsla(196, 65%, 28%, 0.65)",
-      'fill-translate': [0, 0],
-      'fill-outline-color': "hsl(0, 3%, 43%)"
-    },
-    'layout': {
-      'visibility': 'none'
-    },
-    'source': 'composite-1',
-    'source-layer': 'water'
   });
   map.addLayer({
     'id': 'roman-roads-12ig1q',
