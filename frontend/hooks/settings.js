@@ -2,6 +2,7 @@ import {useBase, useGlobalConfig} from '@airtable/blocks/ui';
 
 export const ConfigKeys = {
     MAPBOX_ACCESS_TOKEN: 'mapboxAccessToken',
+    FILTERED_OUT_ELEMENTS_COLOUR: 'mapboxFilteredOutColour',
     GEOMETRY_FIELD: 'mapboxJsonTitle',
     LABEL_FIELD: 'mapboxLabelField',
     IMAGES_FIELD: 'mapboxImagesField',
@@ -12,6 +13,7 @@ export const ConfigKeys = {
 function getSettings(globalConfig) {
     return {
         mapboxAccessToken: globalConfig.get(ConfigKeys.MAPBOX_ACCESS_TOKEN),
+        mapboxFilteredOutColour: globalConfig.get(ConfigKeys.FILTERED_OUT_ELEMENTS_COLOUR),
         geometryField: globalConfig.get(ConfigKeys.GEOMETRY_FIELD),
         labelField: globalConfig.get(ConfigKeys.LABEL_FIELD),
         images: {

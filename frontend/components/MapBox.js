@@ -90,7 +90,11 @@ export function MapBox({
         }
 
         if (!filteredRecordIds.includes(source.id)) {
-          source.properties.color = '#878787';
+          if (settings.mapboxFilteredOutColour) {
+            source.properties.color = settings.mapboxFilteredOutColour;
+          } else {
+            source.properties.color = '#878787';
+          }
         }
 
         return source;

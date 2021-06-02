@@ -67,6 +67,14 @@ function SettingsForm({setIsSettingsOpen}) {
           />
         </FormField>
         <FormField
+            label="Colour of filtered out elements"
+            description="In hex format - e.g: #E5E8E8"
+        >
+          <InputSynced
+              globalConfigKey={ConfigKeys.FILTERED_OUT_ELEMENTS_COLOUR}
+          />
+        </FormField>
+        <FormField
           label="Geometry Field Name"
           description='Must be the same for all tables. This is the "geometry" part of a GeoJSON feature. Currently supports Polygon and MultiPolygon geometry types.'
         >
